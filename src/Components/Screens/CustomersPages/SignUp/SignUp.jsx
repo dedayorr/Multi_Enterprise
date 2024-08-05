@@ -21,7 +21,7 @@ export const SignUp = () => {
     showPasswordTwo,
     errors,
     verification,
-    state,
+    state = {},
     handleCountryChange,
     handlePhoneNumberChange,
     changeHandler,

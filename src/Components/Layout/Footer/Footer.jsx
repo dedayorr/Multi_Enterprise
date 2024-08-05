@@ -11,7 +11,7 @@ import { HashLink } from "react-router-hash-link";
 import { ContextProvider } from "../../Context";
 
 export const Footer = () => {
-  // const { hideNavbar } = useContext(ContextProvider);
+  const { hideNavbar } = useContext(ContextProvider);
 
   const [firstDrop, setFirstDrop] = useState(false);
   const [secondDrop, setSecondDrop] = useState(false);
@@ -36,7 +36,7 @@ export const Footer = () => {
       {/* MOBILE VIEW */}
       <div
         className={`md:hidden bg-[#04177F] text-[#ffffff] pb-[20%]
-  
+        ${hideNavbar === true ? "hidden" : "block md:hidden"}
       `}
       >
         <img
@@ -312,7 +312,7 @@ export const Footer = () => {
       {/* TABLET & DESKTOP VIEW */}
       <div
         className={`hidden md:block bg-[#04177F] text-[#ffffff] pb-[5%] w-[]
-       
+        ${hideNavbar === true ? "hidden md:hidden" : "hidden md:block "}
       `}
       >
         <img

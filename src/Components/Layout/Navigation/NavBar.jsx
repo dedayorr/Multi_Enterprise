@@ -1,13 +1,13 @@
 import React, { useContext, useState } from "react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-// import { ContextProvider } from "../../Context";
+import { ContextProvider } from "../../Context";
 
 export const NavBar = () => {
   const [navOpen, setNavOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // const { hideNavbar } = useContext(ContextProvider);
+  const { hideNavbar } = useContext(ContextProvider);
 
   function handleScroll() {
     if (
@@ -35,7 +35,7 @@ export const NavBar = () => {
         className={`${
           scrolled ? "bg-[#ffffff]" : "bg-transparent"
         } sticky top-0 flex justify-between p-[5%] md:hidden lg:hidden h-[70px]
-     
+        ${hideNavbar === true ? "hidden md:hidden lg:hidden" : "md:flex "}
         `}
         style={{
           zIndex: 999,
@@ -142,4 +142,4 @@ export const NavBar = () => {
   );
 };
 
-// ${hideNavbar === true ? "hidden md:hidden lg:hidden" : "md:flex "}
+// 

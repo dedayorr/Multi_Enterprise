@@ -1,11 +1,21 @@
-import React, { createContext, useState, useRef, useEffect } from "react";
+import React, { createContext, useState,  } from "react";
+import Joi from "joi";
+import axios from "axios";
+
+
+
+
+
+
 export const ContextProvider = createContext();
+
 
 export const Context = ({ children }) => {
   const handleRefresh = () => {
     window.location.reload(true);
     // new
   };
+  
 
   // Select username or email starts here
   const [hideNavbar, setHideNavbar] = useState(false);
@@ -92,6 +102,190 @@ export const Context = ({ children }) => {
     setTwentiethDrop((prev) => !prev);
   }
 
+  const [isFocused, setIsFocused] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordTwo, setShowPasswordTwo] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [verification, setVerification] = useState(false);
+  const [state, setState] = useState({
+    country: "",
+    fullName: "",
+    userName: "",
+    email: "",
+    phoneNumber: "",
+    IVcode: "",
+    password: "",
+    confirmPassword: "",
+    checkbox: false,
+  });
+  const [checkboxChecked, setCheckboxChecked] = useState(false);
+
+  const handleCheckboxChange = (event) => {
+    const { checked } = event.target;
+    setCheckboxChecked(checked);
+    if (checked) {
+      console.log("true");
+    }
+  };
+
+  const handleCountryChange = (countryCode) => {
+    setState({ ...state, country: countryCode });
+  };
+
+  const handlePhoneNumberChange = (value) => {
+    setState({ ...state, phoneNumber: value });
+  };
+
+  function changeHandler(e) {
+    const { name, value, type, checked } = e.target;
+    const inputValue = type === "checkbox" ? checked : value;
+    setState({ ...state, [name]: inputValue });
+  }
+
+  const handleFocus = (index) => {
+    if (!isFocused.includes(index)) {
+      setIsFocused([...isFocused, index]);
+    }
+  };
+
+  const handleBlur = (index) => {
+    if (isFocused.includes(index)) {
+      setIsFocused(isFocused.filter((item) => item !== index));
+    }
+  };
+
+  // ========form validation using regex=======
+  const schema = Joi.object({
+    country: Joi.string().required(),
+
+    fullName: Joi.string()
+      .pattern(new RegExp(/^[A-Za-z]+(?:\s[A-Za-z]+)+$/))
+      .required()
+      .messages({
+        "string.pattern.base": "Please enter your First name and last name",
+      }),
+
+    userName: Joi.string()
+      .pattern(new RegExp(/^[A-Za-z\s]+$/))
+      .required()
+      .messages({ "string.pattern.base": "Invalid Username" }),
+
+    email: Joi.string()
+      .pattern(new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+      .required()
+      .messages({ "string.pattern.base": "Invalid email " }),
+
+    phoneNumber: Joi.string().required(),
+
+    password: Joi.string()
+      .pattern(new RegExp(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{8,}$/))
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Password must have At least one alphabetical character, At least one digit, Contains at least one special character (e.g., !@#$%^&*) and Minimum length of 8 characters",
+      }),
+
+    confirmPassword: Joi.string()
+      .pattern(new RegExp(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{8,}$/))
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Password must have At least one alphabetical character, At least one digit, Contains at least one special character (e.g., !@#$%^&*) and Minimum length of 8 characters",
+      }),
+
+    checkbox: Joi.boolean().required().invalid(false).messages({
+      "any.invalid":
+        "Please ensure you agree to the privacy policy, terms and condition",
+    }),
+  });
+  // ======end of form valdiation=====
+
+  // ======on submit function=======
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const {
+      country,
+      fullName,
+      userName,
+      email,
+      phoneNumber,
+      password,
+      confirmPassword,
+      checkbox,
+    } = state;
+
+    if (password !== confirmPassword) {
+      setErrors({
+        confirmPassword: "Password and Confirm Password do not match",
+      });
+      return;
+    }
+
+    const { error } = schema.validate({
+      fullName,
+      userName,
+      email,
+      phoneNumber,
+      password,
+      confirmPassword,
+      checkbox,
+      country,
+    });
+
+    if (error) {
+      // Handle validation error
+      setErrors(
+        error.details.reduce((acc, curr) => {
+          acc[curr.path[0]] = curr.message;
+          return acc;
+        }, {})
+      );
+    } else {
+      const data = {
+        fullname: fullName,
+        username: userName,
+        phone_number: phoneNumber,
+        // iv_code : IVCode,
+        email: email,
+        password: password,
+        country: country,
+      };
+      const config = {
+        headers: { "Content-Type": "application/json" },
+      };
+      const url = "https://aremxyplug.onrender.com/api/v1/signup";
+      axios
+        .post(url, data, config)
+        .then((response) => {
+          console.log(response);
+          if (response.status === 201) {
+            setVerification(true);
+            setState({
+              country: "",
+              fullName: "",
+              userName: "",
+              email: "",
+              phoneNumber: "",
+              password: "",
+              confirmPassword: "",
+            });
+            setErrors({});
+          } else if (response.status === 200) {
+            alert("User Exist Already");
+          } else if (response.status === 409) {
+            alert("Input already in use: " + response.data);
+          } else {
+            console.log(response.data);
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+          alert(error.response.data.error);
+        });
+    }
+  };
+
   const hold = {
     firstDrop,
     secondDrop,
@@ -136,6 +330,23 @@ export const Context = ({ children }) => {
     hideNavbar,
     setHideNavbar,
     handleRefresh,
+    handleSubmit,
+    handleBlur,
+    handleFocus,
+    changeHandler,
+    handlePhoneNumberChange,
+    handleCountryChange,
+    handleCheckboxChange,
+    verification,
+    checkboxChecked,
+    setCheckboxChecked,
+    showPassword,
+    setShowPassword,
+    showPasswordTwo,
+    setShowPasswordTwo,
+    errors,
+    setErrors,
+    isFocused,
   };
 
   return (
